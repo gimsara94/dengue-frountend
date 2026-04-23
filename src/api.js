@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.PROD 
+    ? 'https://dengue-backend-ylql.onrender.com/api' 
+    : 'http://localhost:5000/api';
+
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api', // adjust if backend port is different
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json'
     }
