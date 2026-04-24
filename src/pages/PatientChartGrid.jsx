@@ -49,13 +49,22 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id }
         setCurrentDate(d.toISOString().split('T')[0]);
     };
 
-    // Helper: Find and merge data matching a specific time slot (e.g. "03:13:00" or "03:00:00" matches the "03" hour slot)
+    // Helper: Find and merge data matching a specific time slot
     const getRowData = (slot) => {
-        const hourPrefix = slot.split(':')[0] + ':';
+        const slotHour = parseInt(slot.split(':')[0], 10);
+        // Critical is hourly (1 hour span), non-critical is 3-hourly (3 hour span)
+        const nextSlotHour = isCritical ? slotHour + 1 : slotHour + 3;
         
         const mergeSlotData = (items) => {
-            const slotItems = items.filter(item => item.chart_time.startsWith(hourPrefix));
+            const slotItems = items.filter(item => {
+                if (!item.chart_time) return false;
+                const itemHour = parseInt(item.chart_time.split(':')[0], 10);
+                return itemHour >= slotHour && itemHour < nextSlotHour;
+            });
+            
             if (slotItems.length === 0) return null;
+            
+            // This merges fields, keeping the last non-null value for each field in the time window
             return slotItems.reduce((acc, curr) => {
                 const cleanCurr = Object.fromEntries(Object.entries(curr).filter(([_, v]) => v !== null && v !== undefined && v !== ''));
                 return { ...acc, ...cleanCurr };
