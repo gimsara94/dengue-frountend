@@ -72,15 +72,20 @@ function Login() {
                 </div>
 
                 <div className="brand-section">
-                    <div className="brand-icon">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2v20M2 12h20" strokeWidth="3" stroke="currentColor" />
-                            <path d="M5 5l14 14M19 5L5 19" strokeWidth="1" stroke="rgba(255,255,255,0.4)" />
+                    <div className="brand-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '24px', padding: '12px', border: '1px solid rgba(255,255,255,0.15)', width: '72px', height: '72px' }}>
+                        <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
+                            <line x1="26" y1="26" x2="74" y2="74" stroke="#93c5fd" strokeWidth="5" strokeLinecap="round"/>
+                            <line x1="74" y1="26" x2="26" y2="74" stroke="#93c5fd" strokeWidth="5" strokeLinecap="round"/>
+                            <line x1="50" y1="18" x2="50" y2="82" stroke="#3b82f6" strokeWidth="12" strokeLinecap="round"/>
+                            <line x1="18" y1="50" x2="82" y2="50" stroke="#3b82f6" strokeWidth="12" strokeLinecap="round"/>
                         </svg>
                     </div>
-                    <h1 className="brand-title">Dengue<br />Monitoring System</h1>
+                    <h1 className="brand-title">
+                        <span style={{ color: '#60a5fa', fontWeight: 800, fontSize: '2.4rem', letterSpacing: '0.08em', display: 'block', marginBottom: '0.2rem' }}>NEXORA</span>
+                        Dengue Patient Monitoring
+                    </h1>
                     <p className="brand-subtitle">
-                        Secure access to global epidemiological data, patient tracking, and outbreak analytics for healthcare professionals.
+                        Secure access to global epidemiological data, patient tracking, and real-time vital analytics for healthcare professionals.
                     </p>
                 </div>
             </div>

@@ -2,21 +2,45 @@
     padding: 2rem;
     max-width: 1400px;
     margin: 0 auto;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+
+.patient-profile-container.is-critical-tint {
+    background: linear-gradient(180deg, #fef2f2 0%, #fff 400px);
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2), 0 10px 25px -5px rgba(239, 68, 68, 0.1);
+}
+
+.critical-top-ribbon {
+    background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    text-transform: uppercase;
 }
 
 .profile-header-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .btn-back {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: none;
-    border: none;
+    background: white;
+    border: 1px solid #e2e8f0;
     color: #475569;
     font-weight: 500;
     cursor: pointer;
@@ -31,29 +55,34 @@
 }
 
 .btn-toggle-critical {
-    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.5rem;
+    min-width: 160px;
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #e2e8f0;
     background-color: white;
-    color: #475569;
+    color: #ef4444;
     transition: all 0.2s;
 }
 
 .btn-toggle-critical:hover {
-    background-color: #f8fafc;
-    border-color: #94a3b8;
+    background-color: #fef2f2;
+    border-color: #fca5a5;
 }
 
 .btn-toggle-critical.active {
-    background-color: #22c55e;
+    background-color: #10b981;
     color: white;
-    border-color: #22c55e;
+    border-color: #10b981;
 }
 
 .btn-toggle-critical.active:hover {
-    background-color: #16a34a;
+    background-color: #059669;
 }
 
 .btn-toggle-critical:disabled {
@@ -146,17 +175,24 @@
     border: 1px solid #e2e8f0;
 }
 
-.chart-section-header {
-    margin-bottom: 2rem;
+.chart-section-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f5f9;
+    text-align: center;
 }
 
-.chart-section-header h2 {
-    color: #0f172a;
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
+.chart-footer-title {
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .chart-instructions {
-    color: #3b82f6;
-    font-weight: 500;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 400;
 }

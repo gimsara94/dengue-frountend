@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import './PatientChartGrid.css';
-import { ChevronLeft, ChevronRight, Edit3, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Edit3, ChevronDown, ChevronUp, Activity } from 'lucide-react';
 import VitalsModal from './VitalsModal';
 import LabsModal from './LabsModal';
 import ObsModal from './ObsModal';
 import VolumesModal from './VolumesModal';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
-const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id }) => {
+const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id, onToggleCritical, isUpdating, isNurseView }) => {
     // Determine time slots based on patient state
     const timeSlots = isCritical
         ? Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`)
@@ -373,12 +373,24 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id }
                     <button className="btn-icon" onClick={() => changeDate(1)}><ChevronRight size={20} /></button>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                    {onToggleCritical && (
+                        <button
+                            className={`btn-toggle-critical ${isCritical ? 'active' : ''}`}
+                            onClick={onToggleCritical}
+                            disabled={isUpdating || isNurseView}
+                            title={isNurseView ? "Nurses cannot change critical state" : ""}
+                            style={isNurseView ? { cursor: 'not-allowed', opacity: 0.7 } : {}}
+                        >
+                            <Activity size={18} />
+                            {isUpdating ? 'Updating...' : (isCritical ? 'Mark Stable' : 'Mark Critical')}
+                        </button>
+                    )}
                     <button
                         className={`btn-edit-toggle ${isEditMode ? 'active' : ''}`}
                         onClick={() => setIsEditMode(!isEditMode)}
                     >
-                        <Edit3 size={18} /> {isEditMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
+                        <Edit3 size={18} /> {isEditMode ? 'Exit Edit Mode' : 'Edit Mode'}
                     </button>
                 </div>
             </div>

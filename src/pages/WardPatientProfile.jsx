@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, User, Activity } from 'lucide-react';
+import { ArrowLeft, User, Activity, AlertTriangle } from 'lucide-react';
 import api from '../api';
 import PatientChartGrid from './PatientChartGrid';
 import './WardPatientProfile.css';
@@ -69,21 +69,20 @@ const WardPatientProfile = () => {
     };
 
     return (
-        <div className="patient-profile-container">
+        <div className={`patient-profile-container ${patientData.is_critical ? 'is-critical-tint' : ''}`}>
+            {/* Top Red Ribbon when Patient is Critical */}
+            {patientData.is_critical && (
+                <div className="critical-top-ribbon">
+                    <AlertTriangle size={20} />
+                    <span>CRITICAL PHASE MONITORING — HOURLY MONITORING REQUIRED</span>
+                </div>
+            )}
+
             <div className="profile-header-actions">
                 <button className="btn-back" onClick={() => navigate(returnPath, { state: { wardName } })}>
                     <ArrowLeft size={18} /> Back to Dashboard
                 </button>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <button
-                        className={`btn-toggle-critical ${patientData.is_critical ? 'active' : ''}`}
-                        onClick={handleToggleCritical}
-                        disabled={isUpdating || isNurseView}
-                        title={isNurseView ? "Nurses cannot change critical state" : ""}
-                        style={isNurseView ? { cursor: 'not-allowed', opacity: 0.7 } : {}}
-                    >
-                        {isUpdating ? 'Updating...' : (patientData.is_critical ? 'Mark Stable' : 'Mark Critical')}
-                    </button>
                     {!isNurseView && (
                         <button
                             onClick={handleDischarge}
@@ -114,12 +113,34 @@ const WardPatientProfile = () => {
                             Discharge
                         </button>
                     )}
-                    {patientData.is_critical && (
-                        <span className="critical-badge-large"><Activity size={18} /> CRITICAL PHASE MONITORING</span>
-                    )}
                 </div>
             </div>
 
+            {/* 1. Observation Chart FIRST */}
+            <div className="chart-section" style={{ marginBottom: '2rem' }}>
+                <PatientChartGrid
+                    isCritical={patientData.is_critical}
+                    bedNo={bed_no}
+                    patientId={patientData.id}
+                    hospital_id={hospital_id}
+                    ward_id={ward_id}
+                    onToggleCritical={handleToggleCritical}
+                    isUpdating={isUpdating}
+                    isNurseView={isNurseView}
+                />
+
+                <div className="chart-section-footer">
+                    <h4 className="chart-footer-title">Observation Chart for Management of Dengue</h4>
+                    <p className="chart-instructions">
+                        {patientData.is_critical
+                            ? "Critical Phase: Hourly monitoring required for fluids, vitals, and UOP."
+                            : "Stable Phase: Monitor parameters 3 hourly. Do FBC daily/bd."
+                        }
+                    </p>
+                </div>
+            </div>
+
+            {/* 2. Details of Patient SECOND */}
             <div className="patient-header-card">
                 <div className="header-top">
                     <User size={40} className="avatar-icon" />
@@ -147,26 +168,6 @@ const WardPatientProfile = () => {
                         <span className="value">{patientData.address || 'N/A'}</span>
                     </div>
                 </div>
-            </div>
-
-            <div className="chart-section">
-                <div className="chart-section-header">
-                    <h2>Observation Chart for Management of Dengue</h2>
-                    <p className="chart-instructions">
-                        {patientData.is_critical
-                            ? "Critical Phase: Hourly monitoring required for fluids, vitals, and UOP."
-                            : "Stable Phase: Monitor parameters 3 hourly. Do FBC daily/bd."
-                        }
-                    </p>
-                </div>
-
-                <PatientChartGrid
-                    isCritical={patientData.is_critical}
-                    bedNo={bed_no}
-                    patientId={patientData.id}
-                    hospital_id={hospital_id}
-                    ward_id={ward_id}
-                />
             </div>
         </div>
     );

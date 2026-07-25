@@ -41,11 +41,13 @@
 .btn-edit-toggle {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
     background-color: white;
     border: 1px solid #e2e8f0;
     color: #475569;
-    padding: 0.5rem 1rem;
+    padding: 0.6rem 1.5rem;
+    min-width: 160px;
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
