@@ -14,8 +14,15 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id }
         ? Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`)
         : ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
 
-    const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
-    const [chartData, setChartData] = useState({ vitals: [], labs: [], observations: [], volumes: [] });
+    const getLocalDateString = (dateObj) => {
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const [currentDate, setCurrentDate] = useState(getLocalDateString(new Date()));
+    const [chartData, setChartData] = useState({ vitals: [], labs: [], observations: [], volumes: [], urine: [] });
     const [loading, setLoading] = useState(true);
     const [isEditMode, setIsEditMode] = useState(false);
     const [showVolumeChart, setShowVolumeChart] = useState(true);
@@ -34,10 +41,10 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id }
                 ? `/charts/staff/${hospital_id}/${ward_id}/${bedNo}?date=${currentDate}`
                 : `/charts/ward/${bedNo}?date=${currentDate}`;
             const res = await api.get(endpoint);
-            setChartData({ ...res.data.data, volumes: res.data.data.volumes || [] });
+            setChartData({ ...res.data.data, volumes: res.data.data.volumes || [], urine: res.data.data.urine || [] });
         } catch (err) {
             console.error('Failed to fetch chart data:', err);
-            setChartData({ vitals: [], labs: [], observations: [], volumes: [] });
+            setChartData({ vitals: [], labs: [], observations: [], volumes: [], urine: [] });
         } finally {
             setLoading(false);
         }
@@ -46,7 +53,7 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id }
     const changeDate = (days) => {
         const d = new Date(currentDate);
         d.setDate(d.getDate() + days);
-        setCurrentDate(d.toISOString().split('T')[0]);
+        setCurrentDate(getLocalDateString(d));
     };
 
     // Helper: Find and merge data matching a specific time slot
@@ -76,7 +83,31 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id }
         const obs = mergeSlotData(chartData.observations);
         const volume = mergeSlotData(chartData.volumes);
         
-        return { vital, lab, obs, volume };
+        // --- NEW URINE LOGIC ---
+        const getUrineForSlot = () => {
+            const urineRecords = chartData.urine || [];
+            let total = 0;
+            let hasData = false;
+            
+            const numHours = isCritical ? 1 : 3;
+            
+            for (let i = 1; i <= numHours; i++) {
+                let targetH = (slotHour + i) % 24;
+                let targetHourStr = (targetH < 10 ? '0' : '') + targetH + ':00';
+                
+                const recordsForHour = urineRecords.filter(r => r.hour === targetHourStr);
+                if (recordsForHour.length > 0) {
+                    const maxVal = Math.max(...recordsForHour.map(r => r.urine_ml));
+                    total += maxVal;
+                    hasData = true;
+                }
+            }
+            return hasData ? { urine_val: total } : null;
+        };
+
+        const urine = getUrineForSlot();
+
+        return { vital, lab, obs, volume, urine };
     };
 
     const handleCellClick = (type, slot, field = null) => {
@@ -97,6 +128,7 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id }
         // Build rows configuration
         const rowsConfig = [
             { label: 'Time', type: 'header', key: 'time' },
+            { label: 'Urine (ml)', type: 'urine', key: 'urine_val' },
             { label: 'PCV %', type: 'labs', key: 'pcv_percentage' },
             { label: 'CRFT', type: 'vitals', key: 'crft' },
             { label: 'PR /min', type: 'vitals', key: 'pr_min' },
@@ -215,14 +247,23 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id }
                                     } else if (row.type === 'volumes' && data.volume) {
                                         cellValue = data.volume[row.key] || '-';
                                         if (data.volume[row.key]) isCellEmpty = false;
+                                    } else if (row.type === 'urine' && data.urine) {
+                                        cellValue = data.urine[row.key] !== undefined ? data.urine[row.key] : '-';
+                                        if (data.urine[row.key] !== undefined) isCellEmpty = false;
                                     }
 
-                                    const isEditable = isEditMode && isCellEmpty;
+                                    const isEditable = isEditMode && row.type !== 'header';
 
                                     return (
                                         <td
                                             key={`${row.key}-${slot}`}
-                                            onClick={() => handleCellClick(row.type, slot, row.key)}
+                                            onClick={() => {
+                                                if (row.type === 'urine') {
+                                                    handleCellClick('vitals', slot, 'urine');
+                                                } else {
+                                                    handleCellClick(row.type, slot, row.key);
+                                                }
+                                            }}
                                             className={isEditable ? 'editable-cell' : ''}
                                         >
                                             {cellValue}
@@ -247,6 +288,7 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id }
                             <th colSpan={6} className="section-vitals">Vitals (Click to Edit)</th>
                             <th colSpan={3} className="section-labs">Labs (Click to Edit)</th>
                             <th rowSpan={2} className="section-obs">Observations/Action</th>
+                            <th rowSpan={2} className="section-urine" style={{ backgroundColor: '#fef9c3', color: '#854d0e' }}>Urine (ml)</th>
                         </tr>
                         <tr>
                             {/* Vitals */}
@@ -264,7 +306,7 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id }
                     </thead>
                     <tbody>
                         {timeSlots.map(slot => {
-                            const { vital, lab, obs, volume } = getRowData(slot);
+                            const { vital, lab, obs, volume, urine } = getRowData(slot);
                             return (
                                 <tr key={slot}>
                                     <td className="time-col">{slot}</td>
@@ -303,6 +345,15 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id }
                                     {/* Obs Cell */}
                                     <td onClick={() => handleCellClick('obs', slot)} className={`obs-cell ${isEditMode && !obs ? 'editable-cell' : ''}`}>
                                         {obs?.observation_text || '-'}
+                                    </td>
+
+                                    {/* Urine Cell */}
+                                    <td 
+                                        onClick={() => handleCellClick('vitals', slot, 'urine')} 
+                                        className={`urine-cell ${isEditMode && urine?.urine_val === undefined ? 'editable-cell' : ''}`} 
+                                        style={{ backgroundColor: '#fefce8', fontWeight: 600, color: '#ca8a04', textAlign: 'center' }}
+                                    >
+                                        {urine?.urine_val !== undefined ? urine.urine_val : '-'}
                                     </td>
                                 </tr>
                             );
@@ -350,6 +401,7 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id }
                 ward_id={ward_id}
                 onSaveSuccess={handleSaveSuccess}
                 activeField={modalOpen.activeField}
+                isCritical={isCritical}
             />
 
             <LabsModal

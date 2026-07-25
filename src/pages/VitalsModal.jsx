@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import api from '../api';
 import { Activity } from 'lucide-react';
 
-const VitalsModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, ward_id, onSaveSuccess, activeField }) => {
+const VitalsModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, ward_id, onSaveSuccess, activeField, isCritical }) => {
     const [formData, setFormData] = useState({
         pr_min: '',
         bp_supine_sys: '',
@@ -11,7 +11,8 @@ const VitalsModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, ward
         bp_sitting_sys: '',
         bp_sitting_dia: '',
         crft: '',
-        rr_min: ''
+        rr_min: '',
+        urine_ml: ''
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -25,34 +26,63 @@ const VitalsModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, ward
         setLoading(true);
         setError('');
 
-        const payload = {
+        const vitalsPayload = {
             chart_date: date,
             chart_time: timeSlot + ':00', // e.g. "03:00" -> "03:00:00"
         };
 
-        // Only include fields that are filled out to satisfy the backend Joi schema
+        // Only include fields that are filled out
+        let hasVitals = false;
         Object.keys(formData).forEach(key => {
-            if (formData[key] !== '') {
-                payload[key] = key === 'crft' ? formData[key] : parseInt(formData[key], 10);
+            if (key !== 'urine_ml' && formData[key] !== '') {
+                vitalsPayload[key] = key === 'crft' ? formData[key] : parseInt(formData[key], 10);
+                hasVitals = true;
             }
         });
 
-        // Ensure at least one actual vital is sent
-        if (Object.keys(payload).length <= 2) {
-            setError('Please enter at least one vital sign value.');
+        const hasUrine = formData.urine_ml !== '';
+
+        if (!hasVitals && !hasUrine) {
+            setError('Please enter at least one value.');
             setLoading(false);
             return;
         }
 
         try {
-            const endpoint = (hospital_id && ward_id)
-                ? `/charts/staff/${hospital_id}/${ward_id}/vitals/${bedNo}`
-                : `/charts/ward/vitals/${bedNo}`;
-            await api.post(endpoint, payload);
-            setFormData({ pr_min: '', bp_supine_sys: '', bp_supine_dia: '', pulse_pressure: '', bp_sitting_sys: '', bp_sitting_dia: '', crft: '', rr_min: '' });
+            const promises = [];
+
+            if (hasVitals) {
+                const vitalsEndpoint = (hospital_id && ward_id)
+                    ? `/charts/staff/${hospital_id}/${ward_id}/vitals/${bedNo}`
+                    : `/charts/ward/vitals/${bedNo}`;
+                promises.push(api.post(vitalsEndpoint, vitalsPayload));
+            }
+
+            if (hasUrine) {
+                const slotHour = parseInt(timeSlot.split(':')[0], 10);
+                const hoursToAdd = isCritical ? 1 : 3;
+                const targetH = (slotHour + hoursToAdd) % 24;
+                const targetHourStr = (targetH < 10 ? '0' : '') + targetH + ':00';
+                
+                const urinePayload = {
+                    chart_date: date,
+                    chart_time: timeSlot + ':00',
+                    hour: targetHourStr,
+                    urine_ml: parseInt(formData.urine_ml, 10)
+                };
+                
+                const urineEndpoint = (hospital_id && ward_id)
+                    ? `/charts/staff/${hospital_id}/${ward_id}/urine/${bedNo}`
+                    : `/charts/ward/urine/${bedNo}`;
+                promises.push(api.post(urineEndpoint, urinePayload));
+            }
+
+            await Promise.all(promises);
+
+            setFormData({ pr_min: '', bp_supine_sys: '', bp_supine_dia: '', pulse_pressure: '', bp_sitting_sys: '', bp_sitting_dia: '', crft: '', rr_min: '', urine_ml: '' });
             onSaveSuccess();
         } catch (err) {
-            setError(err.response?.data?.message || 'Error saving vitals');
+            setError(err.response?.data?.message || 'Error saving data');
         } finally {
             setLoading(false);
         }
@@ -123,9 +153,16 @@ const VitalsModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, ward
                         </div>
                     )}
 
+                    {(!activeField || activeField === 'urine') && (
+                        <div>
+                            <label className="admin-form-label">Urine Volume (ml)</label>
+                            <input type="number" name="urine_ml" className="admin-form-input" value={formData.urine_ml} onChange={handleChange} min="0" placeholder="e.g. 150" />
+                        </div>
+                    )}
+
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                         <button type="button" className="admin-btn-submit" style={{ background: 'white', color: '#475569', border: '1px solid #cbd5e1' }} onClick={() => { setError(''); onClose(); }}>Cancel</button>
-                        <button type="submit" className="admin-btn-submit" disabled={loading}>{loading ? 'Saving...' : 'Save Vitals'}</button>
+                        <button type="submit" className="admin-btn-submit" disabled={loading}>{loading ? 'Saving...' : 'Save Data'}</button>
                     </div>
                 </form>
             </div>

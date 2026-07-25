@@ -5,7 +5,7 @@ import axios from 'axios';
 // Option 1: Dynamic (Recommended: Uses localhost for dev, Render for production)
 const API_BASE_URL = import.meta.env.PROD 
     ? 'https://dengue-backend-ylql.onrender.com/api' 
-    : 'http://localhost:5000/api';
+    : 'http://localhost:5001/api';
 
 // Option 2: Force Localhost (Uncomment to use)
 // const API_BASE_URL = 'http://localhost:5000/api';
