@@ -162,7 +162,7 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id, 
                             <tr>
                                 <th className="row-header-fixed" style={{ verticalAlign: 'middle', backgroundColor: '#f8fafc' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#64748b' }}>
-                                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Volume Graph (ml)</span>
+                                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Volume Input (ml)</span>
                                     </div>
                                 </th>
                                 <td colSpan={24} style={{ padding: 0, height: '180px', verticalAlign: 'bottom', borderBottom: 'none' }}>
@@ -449,6 +449,7 @@ const PatientChartGrid = ({ isCritical, bedNo, patientId, hospital_id, ward_id, 
                 ward_id={ward_id}
                 onSaveSuccess={handleSaveSuccess}
                 activeField={modalOpen.activeField}
+                existingData={modalOpen.type === 'volumes' ? getRowData(modalOpen.timeSlot)?.volume : null}
             />
         </div>
     );

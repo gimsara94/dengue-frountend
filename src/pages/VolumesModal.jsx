@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../api';
 import { Activity } from 'lucide-react';
 
-const VolumesModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, ward_id, onSaveSuccess }) => {
+const VolumesModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, ward_id, onSaveSuccess, existingData, activeField }) => {
     const [formData, setFormData] = useState({
         oral_ml: '',
         n_saline_ml: '',
@@ -13,6 +13,26 @@ const VolumesModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, war
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const inputRefs = useRef({});
+
+    useEffect(() => {
+        if (isOpen) {
+            setFormData({
+                oral_ml: existingData?.oral_ml ?? '',
+                n_saline_ml: existingData?.n_saline_ml ?? '',
+                dextran_40_ml: existingData?.dextran_40_ml ?? '',
+                tetrastarch_ml: existingData?.tetrastarch_ml ?? '',
+                blood_ml: existingData?.blood_ml ?? '',
+                other_ml: existingData?.other_ml ?? ''
+            });
+            setError('');
+            if (activeField && inputRefs.current[activeField]) {
+                setTimeout(() => {
+                    inputRefs.current[activeField]?.focus();
+                }, 100);
+            }
+        }
+    }, [isOpen, existingData, activeField]);
 
     if (!isOpen) return null;
 
@@ -74,6 +94,7 @@ const VolumesModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, war
                         <input
                             type="number"
                             name="oral_ml"
+                            ref={el => inputRefs.current['oral_ml'] = el}
                             value={formData.oral_ml}
                             onChange={handleChange}
                             className="admin-form-input"
@@ -85,6 +106,7 @@ const VolumesModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, war
                         <input
                             type="number"
                             name="n_saline_ml"
+                            ref={el => inputRefs.current['n_saline_ml'] = el}
                             value={formData.n_saline_ml}
                             onChange={handleChange}
                             className="admin-form-input"
@@ -96,6 +118,7 @@ const VolumesModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, war
                         <input
                             type="number"
                             name="dextran_40_ml"
+                            ref={el => inputRefs.current['dextran_40_ml'] = el}
                             value={formData.dextran_40_ml}
                             onChange={handleChange}
                             className="admin-form-input"
@@ -107,6 +130,7 @@ const VolumesModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, war
                         <input
                             type="number"
                             name="tetrastarch_ml"
+                            ref={el => inputRefs.current['tetrastarch_ml'] = el}
                             value={formData.tetrastarch_ml}
                             onChange={handleChange}
                             className="admin-form-input"
@@ -118,6 +142,7 @@ const VolumesModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, war
                         <input
                             type="number"
                             name="blood_ml"
+                            ref={el => inputRefs.current['blood_ml'] = el}
                             value={formData.blood_ml}
                             onChange={handleChange}
                             className="admin-form-input"
@@ -129,6 +154,7 @@ const VolumesModal = ({ isOpen, onClose, date, timeSlot, bedNo, hospital_id, war
                         <input
                             type="number"
                             name="other_ml"
+                            ref={el => inputRefs.current['other_ml'] = el}
                             value={formData.other_ml}
                             onChange={handleChange}
                             className="admin-form-input"
